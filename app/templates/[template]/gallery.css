@@ -1,0 +1,15 @@
+/* Floating switcher on template previews. Prefix: tp- */
+.tp-bar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:50;translate:-50% 0;display:flex;align-items:center;gap:6px;padding:6px;border-radius:999px;max-width:calc(100vw - 24px);
+  background:rgba(12,12,14,.86);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);box-shadow:0 0 0 1px rgba(255,255,255,.1),0 20px 50px -16px rgba(0,0,0,.6);
+  font:500 13px var(--font-hanken),system-ui,sans-serif;color:#f2f2f4;animation:tp-in 500ms var(--ease-out) 400ms both}
+@keyframes tp-in{from{opacity:0;translate:-50% 12px}to{opacity:1;translate:-50% 0}}
+.tp-note{padding:6px 8px 6px 12px;font:500 11px var(--font-jetbrains),monospace;color:#8f8f97;white-space:nowrap;text-decoration:none;transition:color 160ms ease}
+@media (hover:hover) and (pointer:fine){.tp-note:hover{color:#fff}}
+.tp-links{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.tp-links a{padding:8px 12px;border-radius:999px;color:#b4b4bb;text-decoration:none;white-space:nowrap;transition:color 160ms ease,background-color 160ms ease}
+.tp-links a.on{background:rgba(255,255,255,.12);color:#fff}
+@media (hover:hover) and (pointer:fine){.tp-links a:not(.on):hover{color:#fff}}
+.tp-use{padding:8px 14px;border-radius:999px;background:linear-gradient(180deg,#fbfbfc,#dcdce0 55%,#c2c2c7);color:#0a0a0b;font-weight:600;text-decoration:none;white-space:nowrap;transition:transform 160ms var(--ease-out)}
+.tp-use:active{transform:scale(.97)}
+@media (max-width:640px){.tp-note,.tp-use{display:none}}
+@media (prefers-reduced-motion:reduce){.tp-bar{animation:none}}

@@ -1,0 +1,42 @@
+/* Shared contact form. Templates set the --cf-* variables on their root; these are the fallbacks. Prefix: uf-cf */
+.uf-cf{
+  --_fg:var(--cf-fg,currentColor);--_muted:var(--cf-muted,color-mix(in srgb,currentColor 62%,transparent));
+  --_line:var(--cf-line,color-mix(in srgb,currentColor 16%,transparent));--_field:var(--cf-field,color-mix(in srgb,currentColor 4%,transparent));
+  --_accent:var(--cf-accent,currentColor);--_on:var(--cf-on-accent,Canvas);--_r:var(--cf-radius,12px);
+  display:flex;flex-direction:column;gap:14px;width:100%;max-width:640px;color:var(--_fg);font:inherit;text-align:left
+}
+.uf-cf-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.uf-cf-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.uf-cf-field > span{font-size:13px;font-weight:500;color:var(--_muted)}
+.uf-cf input,.uf-cf textarea{width:100%;font:inherit;font-size:15px;line-height:1.45;color:var(--_fg);background:var(--_field);border:0;border-radius:var(--_r);padding:11px 13px;
+  box-shadow:inset 0 0 0 1px var(--_line);transition:box-shadow 160ms ease,background-color 160ms ease}
+.uf-cf textarea{resize:vertical;min-height:112px}
+.uf-cf input:focus,.uf-cf textarea:focus{outline:none;box-shadow:inset 0 0 0 1.5px var(--_accent)}
+.uf-cf input:user-invalid,.uf-cf textarea:user-invalid{box-shadow:inset 0 0 0 1.5px #e5484d}
+.uf-cf-trap{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden}
+.uf-cf-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:12px}
+.uf-cf-status{margin-right:auto;font-size:14px;min-width:0}
+.uf-cf-error{color:#e5484d}
+.uf-cf-send{display:inline-grid;place-items:center;padding:12px 20px;border:0;border-radius:999px;cursor:pointer;font:inherit;font-weight:600;font-size:15px;
+  background:var(--_accent);color:var(--_on);transition:transform 160ms var(--ease-out,ease-out),opacity 160ms ease}
+.uf-cf-send:active{transform:scale(.97)}
+.uf-cf-send:disabled{cursor:progress}
+.uf-cf-send > span{grid-area:1 / 1;display:inline-flex;align-items:center;gap:8px;transition:opacity 160ms ease,filter 160ms ease,transform 200ms var(--ease-out,ease-out)}
+.uf-cf-busy{opacity:0;filter:blur(3px);transform:translateY(4px)}
+.uf-cf-send[data-pending] .uf-cf-idle{opacity:0;filter:blur(3px);transform:translateY(-4px)}
+.uf-cf-send[data-pending] .uf-cf-busy{opacity:1;filter:none;transform:none}
+.uf-cf-spin{display:inline-block;width:13px;height:13px;border-radius:50%;border:1.75px solid currentColor;border-right-color:transparent;animation:uf-cf-rot 650ms linear infinite}
+@keyframes uf-cf-rot{to{transform:rotate(360deg)}}
+.uf-cf-done{flex-direction:row;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:18px 20px;border-radius:var(--_r);box-shadow:inset 0 0 0 1px var(--_line);background:var(--_field);
+  animation:uf-cf-in 260ms var(--ease-out,ease-out) both}
+.uf-cf-done p{margin:0;flex:1;min-width:200px}
+.uf-cf-done svg{width:24px;height:24px;flex:none;fill:none;stroke:var(--_accent);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.uf-cf-done svg path{stroke-dasharray:24;stroke-dashoffset:24;animation:uf-cf-draw 360ms var(--ease-out,ease-out) 80ms forwards}
+.uf-cf-again{border:0;background:none;padding:6px 0;font:inherit;font-size:14px;color:var(--_muted);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+@keyframes uf-cf-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes uf-cf-draw{to{stroke-dashoffset:0}}
+@media (max-width:560px){.uf-cf-row{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){
+  .uf-cf-done,.uf-cf-done svg path{animation:none;stroke-dashoffset:0}
+  .uf-cf-send > span{transition:opacity 160ms ease}
+}

@@ -1,0 +1,3 @@
+.auth{min-height:100svh;display:grid;place-items:center;gap:28px;align-content:center;padding-block:48px;
+  background:radial-gradient(60% 50% at 50% 0%,rgba(220,222,230,.10),transparent 70%),var(--ink)}
+.auth .mark{justify-self:center}

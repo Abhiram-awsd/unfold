@@ -1,0 +1,1138 @@
+<meta charset="utf-8">
+<title>Unfold</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 1160px column. Silk-lit hero with the 3D unfold demo, then quiet sections that each open with a short mono label. Dark-only by design; silver is the only "colour", green only means live. */
+:root{
+  color-scheme:dark;
+  --ink:#050506;
+  --ink-2:#0a0a0b;
+  --surface:#111113;
+  --surface-2:#18181b;
+  --line:rgba(255,255,255,.07);
+  --line-2:rgba(255,255,255,.12);
+  --fg:#f2f2f4;
+  --muted:#93939b;
+  --dim:#5c5c64;
+  --paper:#ebebee;
+  --paper-ink:#141416;
+  --live:#8fe3a8;
+  --silver:linear-gradient(180deg,#fbfbfc 0%,#dcdce0 55%,#c2c2c7 100%);
+  --font-display:"Hanken Grotesk","Helvetica Neue",system-ui,sans-serif;
+  --font-accent:"Instrument Serif",Georgia,"Times New Roman",serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --ease-out:cubic-bezier(0.23,1,0.32,1);
+  --ease-in-out:cubic-bezier(0.77,0,0.175,1);
+  --r-sm:12px;--r-md:18px;--r-lg:28px;
+  --move:1150ms;
+}
+*{box-sizing:border-box}
+html{background:var(--ink);scroll-behavior:smooth}
+body{background:var(--ink);color:var(--fg);font:400 16px/1.6 var(--font-display);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--ink)}
+a{color:inherit;text-decoration:none}
+::selection{background:#e4e4e8;color:#0a0a0b}
+:focus-visible{outline:2px solid rgba(255,255,255,.75);outline-offset:3px;border-radius:10px}
+.skip{position:absolute;left:16px;top:-60px;z-index:100;padding:10px 14px;border-radius:10px;background:var(--fg);color:var(--ink);font-weight:600;transition:transform 160ms var(--ease-out)}
+.skip:focus{transform:translateY(76px)}
+
+.wrap{max-width:1160px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+
+/* ---------- buttons ---------- */
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:10px;border:0;cursor:pointer;white-space:nowrap;
+  font:600 14.5px var(--font-display);letter-spacing:-.005em;border-radius:999px;padding:12px 20px;
+  transition:transform 160ms var(--ease-out),box-shadow 240ms ease,background-color 200ms ease,color 200ms ease;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97)}
+.btn-silver{color:#0a0a0b;background:var(--silver);
+  box-shadow:inset 0 1px 0 #fff,inset 0 -2px 3px rgba(0,0,0,.16),0 0 0 1px rgba(255,255,255,.16),0 1px 2px rgba(0,0,0,.4),0 16px 40px -14px rgba(255,255,255,.22)}
+.btn-silver::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.85) 50%,transparent 65%);transform:translateX(-120%);transition:transform 700ms var(--ease-out)}
+.btn-ghost{color:var(--fg);background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px var(--line-2)}
+.btn-lg{padding:7px 7px 7px 24px;font-size:15.5px;gap:14px}
+.btn .arrow{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;background:#0d0d0f;color:#f2f2f4;box-shadow:inset 0 1px 0 rgba(255,255,255,.14)}
+.btn svg{width:16px;height:16px;flex:none;transition:transform 220ms var(--ease-out)}
+@media (hover:hover) and (pointer:fine){
+  .btn-silver:hover::after{transform:translateX(120%)}
+  .btn-silver:hover .arrow svg,.btn-silver:hover > svg{transform:translateX(2px)}
+  .btn-ghost:hover{background:rgba(255,255,255,.07)}
+}
+
+/* ---------- nav ---------- */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;padding-top:14px;margin-bottom:-72px}
+.nav-in{position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:8px 8px 8px 18px;border-radius:999px;
+  background:linear-gradient(rgba(12,12,14,.66),rgba(12,12,14,.66)) padding-box,linear-gradient(120deg,rgba(255,255,255,.2),rgba(255,255,255,.03) 45%,rgba(255,255,255,.12)) border-box;
+  border:1px solid transparent;backdrop-filter:blur(16px) saturate(140%);-webkit-backdrop-filter:blur(16px) saturate(140%)}
+.mark{display:inline-flex;align-items:center;gap:10px;font:700 17px var(--font-display);letter-spacing:-.02em}
+.mark svg{width:24px;height:24px}
+.nav-links{display:flex;gap:2px}
+.nav-links a{padding:8px 14px;border-radius:999px;font-size:14px;color:var(--muted);transition:color 200ms ease,background-color 200ms ease}
+@media (hover:hover) and (pointer:fine){.nav-links a:hover{color:var(--fg);background:rgba(255,255,255,.05)}}
+.nav-cta{display:flex;align-items:center;gap:6px}
+.nav-cta .btn{padding:10px 16px;font-size:13.5px}
+.signin{color:var(--muted);font-size:14px;padding:8px 12px;transition:color 200ms ease}
+@media (hover:hover) and (pointer:fine){.signin:hover{color:var(--fg)}}
+.menu-btn{display:none;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.05);color:var(--fg);cursor:pointer;place-items:center;transition:transform 160ms var(--ease-out)}
+.menu-btn:active{transform:scale(.95)}
+.menu-btn svg{width:18px;height:18px}
+.menu{position:absolute;right:0;top:calc(100% + 8px);width:min(280px,calc(100vw - 40px));padding:8px;border-radius:20px;
+  background:#121214;box-shadow:0 0 0 1px var(--line-2),0 30px 60px -20px rgba(0,0,0,.9);
+  transform-origin:calc(100% - 28px) 0;transform:scale(.96);opacity:0;pointer-events:none;transition:transform 180ms var(--ease-out),opacity 180ms ease}
+.menu.open{transform:none;opacity:1;pointer-events:auto}
+.menu a{display:block;padding:12px 14px;border-radius:12px;color:var(--muted);font-size:15px}
+.menu a:active{background:rgba(255,255,255,.06)}
+@media (max-width:860px){.nav-links,.signin{display:none}.menu-btn{display:grid}}
+
+/* ---------- hero ---------- */
+.hero{position:relative;isolation:isolate;overflow:hidden;padding-top:72px}
+#silk{position:absolute;inset:0;width:100%;height:100%;z-index:-2;display:block;background:radial-gradient(120% 80% at 30% 20%,#2a2a2d,#0b0b0c 60%)}
+.veil{position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(55% 32% at 50% 22%,rgba(5,5,6,.66),rgba(5,5,6,0) 72%),
+             linear-gradient(180deg,rgba(5,5,6,.2),rgba(5,5,6,0) 25%,rgba(5,5,6,.55) 70%,var(--ink) 100%)}
+.grain{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.06;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.hero-copy{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:clamp(56px,10vh,104px)}
+.badge-pill{display:inline-flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:999px;font:500 12.5px var(--font-display);color:#c9c9cf;
+  background:linear-gradient(rgba(16,16,18,.7),rgba(16,16,18,.7)) padding-box,linear-gradient(120deg,rgba(255,255,255,.28),rgba(255,255,255,.04) 45%,rgba(255,255,255,.18)) border-box;
+  border:1px solid transparent;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.badge-pill b{font:500 10.5px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:#0a0a0b;background:var(--silver);padding:4px 8px;border-radius:999px}
+h1{margin:26px 0 0;max-width:15ch;font:800 clamp(42px,7.2vw,90px)/.98 var(--font-display);letter-spacing:-.048em;text-wrap:balance;padding-bottom:.06em;
+  background:linear-gradient(180deg,#fff 0%,#e4e4e8 45%,#8c8c94 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 em,h2 em{font:400 italic 1.08em/1 var(--font-accent);letter-spacing:-.02em;padding-right:.06em}
+.lede{margin:22px 0 0;max-width:56ch;font-size:clamp(16px,1.6vw,18.5px);color:var(--muted);text-wrap:pretty}
+.lede b{color:#dcdce0;font-weight:500}
+.hero-actions{margin-top:34px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.micro{font:400 12px var(--font-mono);color:var(--dim)}
+.micro span{color:#7c7c84}
+.rise{animation:rise 800ms var(--ease-out) both}
+.rise:nth-child(2){animation-delay:70ms}.rise:nth-child(3){animation-delay:140ms}.rise:nth-child(4){animation-delay:210ms}.rise:nth-child(5){animation-delay:280ms}
+@keyframes rise{from{opacity:.001;transform:translateY(12px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+
+/* ---------- 3D unfold demo ---------- */
+.s3d{position:relative;margin-top:20px;padding-bottom:28px}
+.viewport{position:relative;width:100%;height:540px}
+.fit{position:absolute;left:50%;top:0;width:720px;height:540px;margin-left:-360px;transform-origin:50% 0;perspective:1800px;perspective-origin:50% 40%}
+.tilt{position:absolute;inset:0;transform-style:preserve-3d}
+.scene{position:absolute;left:60px;top:90px;width:600px;height:400px;transform-style:preserve-3d;transition:transform 1400ms var(--ease-in-out)}
+[data-state="resume"]  .scene{transform:translateY(18px) rotateX(56deg) rotateY(0deg) rotateZ(-34deg) scale(.98)}
+[data-state="explode"] .scene{transform:translateY(34px) rotateX(60deg) rotateY(0deg) rotateZ(-24deg) scale(.9)}
+[data-state="live"]    .scene{transform:translateY(-6px) rotateX(14deg) rotateY(-17deg) rotateZ(1.5deg) scale(.96)}
+.floor{position:absolute;left:-420px;top:-320px;width:1440px;height:1040px;transform:translateZ(-2px);pointer-events:none;
+  background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:40px 40px;background-position:center;
+  -webkit-mask:radial-gradient(42% 42% at 50% 50%,#000 20%,transparent 100%);mask:radial-gradient(42% 42% at 50% 50%,#000 20%,transparent 100%);transition:opacity 900ms ease}
+[data-state="live"] .floor{opacity:.35}
+.base{position:absolute;left:0;top:0;width:300px;height:400px;transform:translate3d(150px,0,0);border-radius:10px;
+  transition:transform var(--move) var(--ease-in-out),width var(--move) var(--ease-in-out),height var(--move) var(--ease-in-out),box-shadow 900ms ease,border-radius 600ms ease;
+  box-shadow:0 30px 60px -10px rgba(0,0,0,.7),0 2px 6px rgba(0,0,0,.4)}
+[data-state="explode"] .base{box-shadow:0 50px 90px -20px rgba(0,0,0,.8)}
+[data-state="live"] .base{width:600px;height:364px;transform:translate3d(0,0,0);border-radius:16px;box-shadow:0 60px 120px -30px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.08),0 0 80px -10px rgba(200,204,214,.12)}
+.face{position:absolute;inset:0;border-radius:inherit;overflow:hidden;transition:opacity 600ms ease}
+.paper{background:linear-gradient(165deg,#f6f6f8,var(--paper) 55%,#dcdce0);color:var(--paper-ink)}
+.paper .lbl{position:absolute;left:22px;font:600 7.5px var(--font-mono);letter-spacing:.16em;text-transform:uppercase;color:#7c7c84}
+.paper .rule{position:absolute;left:22px;right:22px;top:76px;height:1px;background:rgba(0,0,0,.1)}
+.paper .pdf{position:absolute;right:16px;top:16px;font:600 7px var(--font-mono);letter-spacing:.12em;padding:4px 6px;border-radius:4px;background:#151517;color:#eee}
+.paper .fold{position:absolute;right:0;bottom:0;width:26px;height:26px;background:linear-gradient(225deg,transparent 50%,#cfcfd4 50%);border-top-left-radius:4px}
+.site{background:linear-gradient(180deg,#121214,#0b0b0d);opacity:0}
+[data-state="live"] .paper{opacity:0;transition-delay:250ms}
+[data-state="live"] .site{opacity:1;transition-delay:250ms}
+.bar{height:34px;display:flex;align-items:center;gap:6px;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.07);background:#161619}
+.bar i{width:8px;height:8px;border-radius:50%;background:#34343a}
+.url{margin-left:10px;display:flex;align-items:center;gap:6px;font:500 9.5px var(--font-mono);color:#a2a2aa;padding:5px 12px;border-radius:99px;background:#0d0d0f;border:1px solid rgba(255,255,255,.06)}
+.url svg{width:9px;height:9px}
+.livepill{margin-left:auto;display:flex;align-items:center;gap:7px;font:500 9px var(--font-mono);color:#c6c6cc;padding:4px 10px;border-radius:99px;background:rgba(143,227,168,.08);border:1px solid rgba(143,227,168,.18);font-variant-numeric:tabular-nums}
+.livepill b{width:6px;height:6px;border-radius:50%;background:var(--live);box-shadow:0 0 8px var(--live);animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.site .glow{position:absolute;left:-10%;top:-30%;width:70%;height:90%;background:radial-gradient(closest-side,rgba(210,212,220,.10),transparent);pointer-events:none}
+.piece{position:absolute;left:0;top:0;width:var(--rw);height:var(--rh);border-radius:8px;transform:translate3d(var(--rx),var(--ry),1px);
+  transition:transform var(--move) var(--ease-in-out) var(--d),width var(--move) var(--ease-in-out) var(--d),height var(--move) var(--ease-in-out) var(--d),background-color 500ms ease var(--d),box-shadow 600ms ease var(--d);
+  background-color:rgba(255,255,255,0)}
+[data-state="explode"] .piece{transform:translate3d(var(--rx),var(--ry),var(--z));background-color:rgba(248,248,250,.94);box-shadow:0 24px 40px -12px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.5)}
+[data-state="live"] .piece{width:var(--lw);height:var(--lh);transform:translate3d(var(--lx),var(--ly),var(--lz,10px))}
+.pf{position:absolute;inset:0;border-radius:inherit;overflow:hidden;transition:opacity 420ms ease,filter 420ms ease}
+.pr{color:var(--paper-ink);padding:6px 8px}
+.pl{opacity:0;filter:blur(4px);color:var(--fg)}
+[data-state="live"] .pr{opacity:0;filter:blur(4px);transition-delay:calc(var(--d) + 200ms)}
+[data-state="live"] .pl{opacity:1;filter:none;transition-delay:calc(var(--d) + 420ms)}
+.avatar{border-radius:50%!important}
+.avatar .pf{display:grid;place-items:center;background:linear-gradient(140deg,#f4f4f6,#9c9ca4 45%,#3c3c42 80%,#b8b8be);box-shadow:inset 0 1px 0 rgba(255,255,255,.8);font:800 13px var(--font-display);color:#0d0d0f;letter-spacing:-.02em;transition:font-size var(--move) var(--ease-in-out)}
+[data-state="live"] .avatar .pf{font-size:19px}
+[data-state="explode"] .avatar{background-color:transparent;box-shadow:0 24px 40px -12px rgba(0,0,0,.6)}
+[data-state="live"] .avatar{box-shadow:0 0 0 3px #121214,0 0 0 4px rgba(255,255,255,.14),0 14px 30px -8px rgba(0,0,0,.8)}
+.name .pr b{display:block;font:800 17px/1.05 var(--font-display);letter-spacing:-.03em}
+.name .pr span{display:block;margin-top:4px;font:500 8.5px var(--font-mono);color:#6e6e76}
+.name .pl{padding:0 0 0 2px}
+.name .pl small{display:flex;align-items:center;gap:6px;font:500 9px var(--font-mono);color:var(--muted);letter-spacing:.04em}
+.name .pl small i{width:5px;height:5px;border-radius:50%;background:var(--live)}
+.name .pl h3{margin:8px 0 0;font:800 25px/1.02 var(--font-display);letter-spacing:-.04em;background:linear-gradient(180deg,#fff,#a6a6ae);-webkit-background-clip:text;background-clip:text;color:transparent}
+.name .pl h3 em{font:400 italic 1.1em/1 var(--font-accent);letter-spacing:-.01em}
+.job .pr .t{display:flex;justify-content:space-between;font:700 9.5px var(--font-display)}
+.job .pr .t span{font:500 8px var(--font-mono);color:#85858d}
+.job .pr .ln{height:3.5px;border-radius:9px;background:rgba(20,20,22,.14);margin-top:5px}
+[data-state="live"] .job{background-color:#141417;box-shadow:0 0 0 1px rgba(255,255,255,.07),0 18px 36px -14px rgba(0,0,0,.8)}
+.job .pl{padding:7px}
+.thumb{height:84px;border-radius:7px;position:relative;overflow:hidden}
+.thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,255,255,.22),transparent 45%)}
+.th1{background:radial-gradient(80% 90% at 25% 20%,#8a8a92,#26262a 75%)}
+.th2{background:linear-gradient(135deg,#1e1e22,#5a5a62 52%,#1a1a1d)}
+.th3{background:repeating-linear-gradient(135deg,#232327 0 7px,#2d2d32 7px 14px)}
+.thumb .ui{position:absolute;left:10px;right:10px;bottom:10px;height:30px;border-radius:5px;background:rgba(10,10,12,.55);display:flex;gap:4px;padding:6px}
+.thumb .ui span{flex:1;border-radius:3px;background:rgba(255,255,255,.18)}
+.thumb .ui span:first-child{flex:.5;background:rgba(255,255,255,.45)}
+.job .pl b{display:block;margin-top:8px;font:600 10.5px var(--font-display);padding-left:2px}
+.job .pl small{display:block;margin-top:2px;font:500 8px var(--font-mono);color:#74747c;padding-left:2px}
+.skills .pr{display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start}
+.chip{font:500 8px var(--font-mono);padding:3px 7px;border-radius:99px;background:rgba(20,20,22,.08);color:#2b2b30;white-space:nowrap}
+.skills .pl{display:flex;align-items:center;gap:5px;padding:0}
+.skills .pl .chip{background:rgba(255,255,255,.05);color:#bdbdc3;border:1px solid rgba(255,255,255,.08);font-size:8.5px;padding:5px 9px}
+.skills .pl .chip:first-child{color:#0b0b0c;background:var(--silver);border-color:transparent}
+.contact .pr{font:500 8px/1.5 var(--font-mono);color:#55555c}
+.contact .pl{display:flex;align-items:center;justify-content:center;gap:7px;border-radius:99px;font:600 11px var(--font-display);color:#0b0b0c;background:var(--silver);
+  box-shadow:inset 0 1px 0 #fff,inset 0 -2px 3px rgba(0,0,0,.18),0 10px 24px -8px rgba(255,255,255,.25);transition:opacity 420ms ease,filter 420ms ease,transform 160ms var(--ease-out)}
+.contact .pl svg{width:10px;height:10px}
+.contact.press .pl{transform:scale(.95)}
+[data-state="live"] .contact{border-radius:99px}
+.fbadge{position:absolute;left:0;top:0;display:flex;align-items:center;gap:10px;padding:9px 13px 9px 9px;border-radius:14px;white-space:nowrap;
+  background:linear-gradient(rgba(22,22,25,.86),rgba(22,22,25,.86)) padding-box,linear-gradient(130deg,rgba(255,255,255,.32),rgba(255,255,255,.04) 45%,rgba(255,255,255,.18)) border-box;
+  border:1px solid transparent;box-shadow:0 24px 50px -16px rgba(0,0,0,.9);opacity:0;transform:translate3d(var(--bx),var(--by),calc(var(--bz) - 30px)) scale(.94);transition:opacity 380ms ease,transform 700ms var(--ease-out)}
+.fbadge .ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:linear-gradient(140deg,#f2f2f4,#8e8e96);color:#0b0b0c}
+.fbadge .ic svg{width:13px;height:13px}
+.fbadge b{display:block;font:600 11px var(--font-display);color:var(--fg)}
+.fbadge small{display:block;font:500 8.5px var(--font-mono);color:var(--muted);margin-top:2px;font-variant-numeric:tabular-nums}
+.fbadge.on{opacity:1;transform:translate3d(var(--bx),var(--by),var(--bz)) scale(1);transition:opacity 500ms ease 250ms,transform 900ms var(--ease-out) 250ms}
+.spark{width:54px;height:20px;margin-left:4px}
+.cursor{position:absolute;left:0;top:0;width:18px;height:18px;opacity:0;transform:translate3d(470px,300px,30px);transition:opacity 300ms ease,transform 950ms var(--ease-in-out);filter:drop-shadow(0 4px 6px rgba(0,0,0,.6))}
+.cursor.on{opacity:1}
+.cursor.go{transform:translate3d(512px,90px,30px)}
+.steps{display:flex;justify-content:center;gap:6px;margin:6px auto 0;padding:5px;width:max-content;max-width:100%;border-radius:99px;background:rgba(255,255,255,.03);border:1px solid var(--line);backdrop-filter:blur(10px)}
+.step{position:relative;overflow:hidden;font:500 12px var(--font-display);color:var(--muted);background:transparent;border:0;border-radius:99px;padding:8px 14px;cursor:pointer;white-space:nowrap;
+  transition:color 200ms ease,background-color 200ms ease,transform 160ms var(--ease-out)}
+.step:active{transform:scale(.97)}
+.step[aria-pressed="true"]{color:var(--fg);background:rgba(255,255,255,.07)}
+.step .prog{position:absolute;left:14px;right:14px;bottom:4px;height:1.5px;border-radius:2px;background:rgba(255,255,255,.55);transform:scaleX(0);transform-origin:0 50%}
+.step.run .prog{animation:prog var(--dur) linear forwards}
+@keyframes prog{to{transform:scaleX(1)}}
+@media (hover:hover) and (pointer:fine){.step[aria-pressed="false"]:hover{color:var(--fg)}}
+
+/* ---------- formats strip ---------- */
+.formats{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 28px;padding-block:28px 8px;border-top:1px solid var(--line)}
+.formats p{margin:0;font:500 12.5px var(--font-mono);color:var(--dim);width:100%;text-align:center}
+.formats span{display:inline-flex;align-items:center;gap:8px;font:600 15px var(--font-display);color:#a5a5ad;letter-spacing:-.01em}
+.formats svg{width:17px;height:17px;color:#7d7d85}
+
+/* ---------- section scaffolding ---------- */
+section.sec{padding-block:112px 0;scroll-margin-top:80px}
+.sec-head{max-width:720px;margin-bottom:48px}
+.sec-head.center{margin-inline:auto;text-align:center}
+.label{font:500 12px var(--font-mono);color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+h2{margin:14px 0 0;font:800 clamp(32px,4.6vw,54px)/1.02 var(--font-display);letter-spacing:-.04em;text-wrap:balance}
+h2 em{color:#d4d4d9}
+.sec-sub{margin:16px 0 0;color:var(--muted);font-size:17px;max-width:58ch;text-wrap:pretty}
+.center .sec-sub{margin-inline:auto}
+.card{position:relative;border-radius:var(--r-lg);background:linear-gradient(180deg,#121214,#0d0d0f);box-shadow:inset 0 0 0 1px var(--line),inset 0 1px 0 rgba(255,255,255,.05)}
+
+/* reveal: always visible at rest; the entrance only plays when an element first scrolls into view */
+[hidden]{display:none!important}
+.reveal.in{animation:revealIn 800ms var(--ease-out) both;animation-delay:var(--rd,0ms)}
+@keyframes revealIn{from{opacity:.001;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---------- how it works ---------- */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.how .card{padding:26px;display:flex;flex-direction:column;gap:18px;min-width:0}
+.how-n{display:flex;align-items:center;gap:10px;font:500 12px var(--font-mono);color:var(--dim)}
+.how-n b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--silver);color:#0a0a0b;font:700 12px var(--font-mono);box-shadow:inset 0 1px 0 #fff}
+.how h3{margin:0;font:700 22px/1.15 var(--font-display);letter-spacing:-.025em}
+.how p{margin:0;color:var(--muted);font-size:15px}
+.how-vis{margin-top:auto;height:150px;border-radius:16px;background:#0a0a0b;box-shadow:inset 0 0 0 1px var(--line);position:relative;overflow:hidden;display:grid;place-items:center}
+.drop{width:72%;height:96px;border-radius:14px;border:1.5px dashed rgba(255,255,255,.18);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:500 11px var(--font-mono);color:var(--dim)}
+.drop .file{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:9px;background:var(--paper);color:var(--paper-ink);font:600 11px var(--font-display);box-shadow:0 10px 20px -8px rgba(0,0,0,.8);animation:bob 3.2s var(--ease-in-out) infinite alternate}
+.drop .file i{font:600 8px var(--font-mono);font-style:normal;padding:2px 4px;border-radius:3px;background:#151517;color:#eee}
+@keyframes bob{to{transform:translateY(-6px)}}
+.review{width:80%;display:grid;gap:7px}
+.review div{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;background:#141417;box-shadow:inset 0 0 0 1px var(--line);font:500 11.5px var(--font-display);color:#c8c8ce}
+.review div span{margin-left:auto;font:500 10px var(--font-mono);color:var(--live)}
+.review div.edit span{color:var(--muted)}
+.review svg{width:12px;height:12px;color:var(--live);flex:none}
+.publish{display:flex;flex-direction:column;align-items:center;gap:12px}
+.publish .url-big{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#141417;box-shadow:inset 0 0 0 1px var(--line-2);font:500 13px var(--font-mono);color:#d8d8dc}
+.publish .url-big b{width:7px;height:7px;border-radius:50%;background:var(--live);box-shadow:0 0 8px var(--live)}
+.publish small{font:500 11px var(--font-mono);color:var(--dim)}
+
+/* ---------- before / after ---------- */
+.ba{position:relative;aspect-ratio:16/9;max-width:100%;border-radius:var(--r-lg);overflow:hidden;box-shadow:0 0 0 1px var(--line-2),0 40px 90px -30px rgba(0,0,0,.9);
+  user-select:none;-webkit-user-select:none;touch-action:pan-y;cursor:ew-resize;container-type:inline-size}
+.ba-layer{position:absolute;inset:0}
+.ba-site{background:linear-gradient(180deg,#121214,#0a0a0b)}
+.ba-resume{background:#d9d9dd;clip-path:inset(0 50% 0 0);display:grid;place-items:center start;padding-left:9%}
+.ba-tag{position:absolute;top:16px;font:600 11px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;border-radius:99px}
+.ba-site .ba-tag{right:16px;background:rgba(255,255,255,.08);color:#dcdce0}
+.ba-resume .ba-tag{left:16px;background:#151517;color:#eee}
+.sheet{width:34%;aspect-ratio:8.5/11;background:#f8f8fa;border-radius:4px;box-shadow:0 20px 40px -14px rgba(0,0,0,.35);padding:4.5cqw 3.6cqw;color:var(--paper-ink);font-size:1.1cqw;overflow:hidden}
+.sheet b{display:block;font:800 2.6cqw/1 var(--font-display);letter-spacing:-.03em}
+.sheet small{display:block;font:500 1cqw var(--font-mono);color:#6e6e76;margin-top:.6cqw}
+.sheet hr{border:0;height:1px;background:rgba(0,0,0,.12);margin:1.8cqw 0 1.4cqw}
+.sheet .h{font:600 .85cqw var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:#7a7a82;margin-bottom:1cqw}
+.sheet .row{font:700 1.15cqw var(--font-display);margin-top:1.2cqw}
+.sheet .ln{height:.5cqw;border-radius:9px;background:rgba(20,20,22,.13);margin-top:.6cqw}
+.mini{position:absolute;inset:7% 6% 0;border-radius:2cqw 2cqw 0 0;background:#0e0e10;box-shadow:0 0 0 1px rgba(255,255,255,.08);overflow:hidden}
+.mini-bar{height:4.4cqw;display:flex;align-items:center;gap:.7cqw;padding:0 2cqw;background:#161619;border-bottom:1px solid var(--line)}
+.mini-bar i{width:1cqw;height:1cqw;border-radius:50%;background:#34343a}
+.mini-bar span{margin-left:1.4cqw;font:500 1.15cqw var(--font-mono);color:#a2a2aa;padding:.6cqw 1.6cqw;border-radius:99px;background:#0b0b0d}
+.mini-body{padding:4cqw 4.4cqw;display:grid;grid-template-columns:1fr 1.1fr;gap:3cqw;align-items:start}
+.mini-body h4{margin:1cqw 0 0;font:800 4.4cqw/1 var(--font-display);letter-spacing:-.045em;background:linear-gradient(180deg,#fff,#9e9ea6);-webkit-background-clip:text;background-clip:text;color:transparent}
+.mini-body h4 em{font:400 italic 1.1em/1 var(--font-accent)}
+.mini-body p{margin:1.6cqw 0 0;font-size:1.35cqw;color:var(--muted);line-height:1.5}
+.mini-body .eb{font:500 1.1cqw var(--font-mono);color:var(--dim)}
+.mini-btn{display:inline-block;margin-top:2cqw;padding:1cqw 2cqw;border-radius:99px;background:var(--silver);color:#0b0b0c;font:600 1.3cqw var(--font-display)}
+.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.4cqw}
+.mini-grid div{aspect-ratio:4/3;border-radius:1.2cqw;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
+.ba-handle{position:absolute;top:0;bottom:0;left:0;width:0;transform:translateX(50cqw);pointer-events:none}
+.ba-handle::before{content:"";position:absolute;top:0;bottom:0;left:-1px;width:2px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.9) 15%,rgba(255,255,255,.9) 85%,transparent)}
+.ba-knob{position:absolute;top:50%;left:0;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;display:grid;place-items:center;background:var(--silver);color:#0b0b0c;
+  box-shadow:inset 0 1px 0 #fff,0 10px 30px -6px rgba(0,0,0,.8);pointer-events:auto;cursor:grab;transition:transform 160ms var(--ease-out)}
+.ba.dragging .ba-knob{transform:scale(.94);cursor:grabbing}
+.ba-knob svg{width:20px;height:20px}
+.ba-knob:focus-visible{outline:2px solid #fff;outline-offset:4px;border-radius:50%}
+.ba-note{margin-top:14px;text-align:center;font:500 12px var(--font-mono);color:var(--dim)}
+
+/* ---------- features bento ---------- */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.feat{padding:26px;display:flex;flex-direction:column;gap:10px;overflow:hidden;min-width:0}
+.feat.w3{grid-column:span 3}.feat.w2{grid-column:span 2}.feat.w4{grid-column:span 4}
+.feat h3{margin:0;font:700 20px/1.2 var(--font-display);letter-spacing:-.02em}
+.feat p{margin:0;color:var(--muted);font-size:15px;max-width:46ch}
+.fvis{margin-top:auto;padding-top:20px}
+.feat-spot::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity 260ms ease;
+  background:radial-gradient(360px 220px at var(--sx,50%) var(--sy,50%),rgba(230,232,238,.07),transparent 70%)}
+@media (hover:hover) and (pointer:fine){.feat-spot:hover::before{opacity:1}}
+.files{display:flex;flex-wrap:wrap;gap:8px}
+.files span{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:11px;background:#18181b;box-shadow:inset 0 0 0 1px var(--line);font:500 12px var(--font-mono);color:#c4c4ca}
+.files span i{font-style:normal;font:600 9px var(--font-mono);padding:2px 5px;border-radius:4px;background:var(--paper);color:var(--paper-ink)}
+.rewrite{display:grid;gap:10px}
+.rewrite .from{font:500 12.5px var(--font-mono);color:var(--dim);text-decoration:line-through;text-decoration-color:rgba(255,255,255,.25)}
+.rewrite .to{padding:14px 16px;border-radius:14px;background:#141417;box-shadow:inset 0 0 0 1px var(--line);font-size:14.5px;color:#dcdce0;line-height:1.5}
+.rewrite .to b{font-weight:600;color:#fff}
+.domain{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:14px;background:#141417;box-shadow:inset 0 0 0 1px var(--line);font:500 13.5px var(--font-mono);color:#dcdce0;overflow:hidden}
+.domain .lock{width:13px;height:13px;color:var(--live);flex:none}
+.domain .typed{white-space:nowrap;overflow:hidden}
+.domain .caret{width:1.5px;height:16px;background:#fff;animation:blink 1s steps(1) infinite;flex:none}
+@keyframes blink{50%{opacity:0}}
+.chart{width:100%;height:120px;display:block;overflow:visible}
+.chart-legend{display:flex;justify-content:space-between;font:500 11px var(--font-mono);color:var(--dim);margin-top:8px;font-variant-numeric:tabular-nums}
+.chart-legend b{color:var(--fg);font-weight:500}
+.sync{display:flex;align-items:center;gap:12px}
+.sync .doc,.sync .web{flex:1;height:70px;border-radius:12px;padding:10px;display:grid;gap:5px;align-content:start}
+.sync .doc{background:var(--paper)}
+.sync .doc span{height:4px;border-radius:9px;background:rgba(0,0,0,.14)}
+.sync .web{background:#141417;box-shadow:inset 0 0 0 1px var(--line)}
+.sync .web span{height:4px;border-radius:9px;background:rgba(255,255,255,.14)}
+.sync .doc span.new,.sync .web span.new{background:#7d7d85;animation:glow 2.4s ease-in-out infinite}
+.sync .web span.new{background:#d8d8dc}
+@keyframes glow{50%{opacity:.4}}
+.sync svg{width:22px;height:22px;color:#9a9aa2;flex:none}
+.toggles{display:grid;gap:8px}
+.tog{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:12px;background:#141417;box-shadow:inset 0 0 0 1px var(--line);font-size:14px;color:#c8c8ce;cursor:pointer}
+.switch{position:relative;width:34px;height:20px;border-radius:99px;background:#2a2a2f;flex:none;transition:background-color 200ms ease}
+.switch::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:#e8e8ec;box-shadow:0 1px 3px rgba(0,0,0,.4);transition:transform 220ms var(--ease-out)}
+.tog input{position:absolute;opacity:0;pointer-events:none}
+.tog input:checked + .switch{background:#8a8a92}
+.tog input:checked + .switch::after{transform:translateX(14px)}
+.tog input:focus-visible + .switch{outline:2px solid #fff;outline-offset:2px}
+
+/* ---------- themes ---------- */
+.themes{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start}
+.themes > *{min-width:0}
+.theme-list{display:grid;gap:8px}
+.theme-btn{display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;width:100%;padding:16px 18px;border-radius:18px;border:0;cursor:pointer;color:var(--muted);
+  background:transparent;box-shadow:inset 0 0 0 1px var(--line);font:inherit;transition:background-color 200ms ease,color 200ms ease,box-shadow 200ms ease,transform 160ms var(--ease-out)}
+.theme-btn:active{transform:scale(.98)}
+.theme-btn b{font:700 16px var(--font-display);color:var(--fg);letter-spacing:-.01em}
+.theme-btn span{font-size:13.5px}
+.theme-btn[aria-pressed="true"]{background:#141417;box-shadow:inset 0 0 0 1px var(--line-2),0 16px 40px -20px rgba(0,0,0,.9)}
+@media (hover:hover) and (pointer:fine){.theme-btn[aria-pressed="false"]:hover{background:rgba(255,255,255,.025)}}
+.preview{border-radius:var(--r-lg);overflow:hidden;box-shadow:0 0 0 1px var(--line-2),0 40px 90px -30px rgba(0,0,0,.9)}
+.pv-bar{height:38px;display:flex;align-items:center;gap:6px;padding:0 14px;background:#161619;border-bottom:1px solid var(--line)}
+.pv-bar i{width:9px;height:9px;border-radius:50%;background:#34343a}
+.pv-bar span{margin-left:10px;font:500 11.5px var(--font-mono);color:#a2a2aa;padding:5px 12px;border-radius:99px;background:#0b0b0d}
+.pv{position:relative;padding:clamp(22px,4vw,44px);min-height:400px;transition:opacity 180ms ease,filter 180ms ease,background-color 300ms ease}
+.pv.swap{opacity:.4;filter:blur(3px)}
+.pv-top{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.pv-logo{font:700 15px var(--font-display);letter-spacing:-.02em}
+.pv-nav{display:flex;gap:16px;font-size:13px}
+.pv-hero{margin-top:clamp(28px,5vw,56px);max-width:560px}
+.pv-hero small{display:block;font:500 12px var(--font-mono)}
+.pv-hero h3{margin:12px 0 0;font-size:clamp(26px,4vw,44px);line-height:1.02;letter-spacing:-.04em}
+.pv-works{margin-top:clamp(24px,4vw,40px);display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pv-works div{aspect-ratio:4/3;border-radius:12px}
+.pv-works span{display:block;margin-top:8px;font-size:12.5px;font-weight:600}
+/* theme: Graphite */
+.t-graphite{background:linear-gradient(180deg,#121214,#0b0b0d);color:#f2f2f4}
+.t-graphite .pv-nav,.t-graphite .pv-hero small{color:#8f8f97}
+.t-graphite .pv-hero h3{font-family:var(--font-display);font-weight:800;background:linear-gradient(180deg,#fff,#a2a2aa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.t-graphite .pv-works div:nth-child(1){background:radial-gradient(80% 90% at 25% 20%,#7a7a82,#202024 75%)}
+.t-graphite .pv-works > :nth-child(2) div{background:linear-gradient(135deg,#1c1c20,#55555c 52%,#18181b)}
+.t-graphite .pv-works > :nth-child(3) div{background:repeating-linear-gradient(135deg,#202024 0 8px,#2a2a2f 8px 16px)}
+/* theme: Broadsheet */
+.t-paper{background:#efeee9;color:#151513}
+.t-paper .pv-logo{font-family:var(--font-accent);font-style:italic;font-weight:400;font-size:20px}
+.t-paper .pv-nav,.t-paper .pv-hero small{color:#6b6a63}
+.t-paper .pv-hero h3{font-family:var(--font-accent);font-weight:400;font-size:clamp(30px,4.6vw,52px);letter-spacing:-.02em}
+.t-paper .pv-works div{background:#d9d8d1}
+.t-paper .pv-works > :nth-child(2) div{background:#c9c8c0}
+.t-paper .pv-works > :nth-child(3) div{background:#bdbcb3}
+/* theme: Studio */
+.t-studio{background:#e9e9ec;color:#0c0c0e;background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px);background-size:32px 32px}
+.t-studio .pv-logo{font-family:var(--font-mono);font-weight:500;font-size:13px}
+.t-studio .pv-nav,.t-studio .pv-hero small{color:#5e5e66;font-family:var(--font-mono)}
+.t-studio .pv-hero h3{font-family:var(--font-display);font-weight:800;text-transform:uppercase;font-size:clamp(28px,4.6vw,54px);letter-spacing:-.05em;line-height:.92}
+.t-studio .pv-works div{background:#0c0c0e;border-radius:0}
+.t-studio .pv-works > :nth-child(2) div{background:#3b3b40}
+.t-studio .pv-works > :nth-child(3) div{background:#8b8b92}
+
+/* ---------- pricing ---------- */
+.bill{display:inline-flex;gap:4px;padding:4px;border-radius:99px;background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px var(--line);margin-top:24px}
+.bill button{border:0;background:transparent;color:var(--muted);font:500 13.5px var(--font-display);padding:8px 16px;border-radius:99px;cursor:pointer;transition:color 200ms ease,background-color 200ms ease,transform 160ms var(--ease-out)}
+.bill button:active{transform:scale(.97)}
+.bill button[aria-pressed="true"]{background:rgba(255,255,255,.08);color:var(--fg)}
+.bill button small{font:500 10.5px var(--font-mono);color:var(--live);margin-left:6px}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:stretch}
+.plan{padding:28px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.plan.pro{background:linear-gradient(180deg,#1a1a1d,#101012);box-shadow:inset 0 0 0 1px var(--line-2),0 40px 90px -40px rgba(220,222,230,.18)}
+.plan-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.plan-h b{font:700 18px var(--font-display);letter-spacing:-.01em}
+.plan-h span{font:500 10.5px var(--font-mono);text-transform:uppercase;letter-spacing:.08em;padding:4px 9px;border-radius:99px;background:var(--silver);color:#0a0a0b}
+.plan p{margin:0;color:var(--muted);font-size:14.5px}
+.price{display:flex;align-items:baseline;gap:6px;font-variant-numeric:tabular-nums}
+.price .amt{font:800 48px/1 var(--font-display);letter-spacing:-.045em;display:inline-block;transition:opacity 160ms ease,filter 160ms ease,transform 160ms var(--ease-out)}
+.price .amt.swap{opacity:0;filter:blur(4px);transform:translateY(-4px)}
+.price small{font:500 13px var(--font-mono);color:var(--dim)}
+.plan ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;font-size:14.5px;color:#cfcfd4}
+.plan li{display:flex;gap:10px;align-items:flex-start}
+.plan li svg{width:16px;height:16px;flex:none;margin-top:3px;color:#a8a8b0}
+.plan .btn{margin-top:auto;width:100%}
+.price-note{margin-top:18px;text-align:center;font:500 12.5px var(--font-mono);color:var(--dim)}
+
+/* ---------- FAQ ---------- */
+.faq{max-width:820px;margin:0 auto;border-top:1px solid var(--line)}
+.qa{border-bottom:1px solid var(--line)}
+.qa button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 4px;border:0;background:transparent;color:var(--fg);cursor:pointer;text-align:left;
+  font:600 17.5px/1.35 var(--font-display);letter-spacing:-.015em}
+.qa .pm{position:relative;width:14px;height:14px;flex:none}
+.qa .pm::before,.qa .pm::after{content:"";position:absolute;left:0;top:6px;width:14px;height:2px;border-radius:2px;background:#a8a8b0;transition:transform 240ms var(--ease-out)}
+.qa .pm::after{transform:rotate(90deg)}
+.qa button[aria-expanded="true"] .pm::after{transform:rotate(0)}
+.qa .ans{display:grid;grid-template-rows:0fr;transition:grid-template-rows 260ms var(--ease-in-out)}
+.qa .ans > div{overflow:hidden}
+.qa .ans p{margin:0;padding:0 40px 22px 4px;color:var(--muted);font-size:15.5px;max-width:64ch;opacity:0;transition:opacity 200ms ease}
+.qa button[aria-expanded="true"] + .ans{grid-template-rows:1fr}
+.qa button[aria-expanded="true"] + .ans p{opacity:1;transition-delay:60ms}
+
+/* ---------- final CTA ---------- */
+.final{position:relative;overflow:hidden;padding:clamp(32px,6vw,72px);border-radius:36px;text-align:center;
+  background:radial-gradient(60% 70% at 50% 0%,rgba(220,222,230,.12),transparent 70%),linear-gradient(180deg,#131315,#0b0b0c);box-shadow:inset 0 0 0 1px var(--line-2)}
+.final h2{max-width:16ch;margin-inline:auto}
+.dz{position:relative;margin:36px auto 0;max-width:560px;border-radius:24px;padding:28px;cursor:pointer;
+  background:rgba(255,255,255,.02);border:1.5px dashed rgba(255,255,255,.16);transition:border-color 200ms ease,background-color 200ms ease,transform 160ms var(--ease-out)}
+.dz:active{transform:scale(.99)}
+.dz.over{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.05)}
+.dz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.dz-idle{display:flex;flex-direction:column;align-items:center;gap:12px;pointer-events:none}
+.dz-icon{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--silver);color:#0a0a0b;box-shadow:inset 0 1px 0 #fff,0 10px 24px -10px rgba(255,255,255,.3)}
+.dz-icon svg{width:22px;height:22px}
+.dz-idle b{font:600 16px var(--font-display)}
+.dz-idle span{font:500 12.5px var(--font-mono);color:var(--dim)}
+.dz-run{display:flex;flex-direction:column;gap:14px;text-align:left}
+.dz-file{display:flex;align-items:center;gap:12px}
+.dz-file i{font:600 9.5px var(--font-mono);font-style:normal;padding:4px 6px;border-radius:5px;background:var(--paper);color:var(--paper-ink)}
+.dz-file b{font:600 15px var(--font-display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+.dz-file button{border:0;background:transparent;color:var(--muted);font:500 12.5px var(--font-mono);cursor:pointer;padding:6px 8px;border-radius:8px;position:relative;z-index:2}
+@media (hover:hover) and (pointer:fine){.dz-file button:hover{color:var(--fg)}}
+.dz-track{height:4px;border-radius:9px;background:rgba(255,255,255,.08);overflow:hidden}
+.dz-fill{height:100%;width:100%;border-radius:inherit;background:linear-gradient(90deg,#8a8a92,#f2f2f4);transform:scaleX(0);transform-origin:0 50%;transition:transform 600ms var(--ease-out)}
+.dz-stage{display:flex;justify-content:space-between;gap:12px;font:500 12.5px var(--font-mono);color:var(--muted)}
+.dz-stage span:last-child{color:var(--dim);font-variant-numeric:tabular-nums}
+.dz-done{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:rgba(143,227,168,.06);box-shadow:inset 0 0 0 1px rgba(143,227,168,.18);font-size:14.5px;color:#dcdce0}
+.dz-done svg{width:16px;height:16px;color:var(--live);flex:none}
+.dz-done span{font:500 12px var(--font-mono);color:var(--muted);margin-left:auto}
+.final .micro{margin-top:16px}
+
+/* ---------- footer ---------- */
+footer{margin-top:112px;border-top:1px solid var(--line);padding-block:48px 40px}
+.foot{display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:32px}
+.foot p{margin:14px 0 0;color:var(--dim);font-size:14px;max-width:32ch}
+.foot h4{margin:0 0 14px;font:500 12px var(--font-mono);color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+.foot ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;font-size:14.5px;color:var(--muted)}
+.foot ul a{transition:color 200ms ease}
+@media (hover:hover) and (pointer:fine){.foot ul a:hover{color:var(--fg)}}
+.foot-base{margin-top:48px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font:500 12.5px var(--font-mono);color:var(--dim)}
+.foot-base .ok{display:inline-flex;align-items:center;gap:8px}
+.foot-base .ok b{width:7px;height:7px;border-radius:50%;background:var(--live)}
+
+/* ---------- toast ---------- */
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:80;padding:11px 18px;border-radius:999px;max-width:calc(100vw - 32px);
+  background:#f2f2f4;color:#0a0a0b;font:600 13.5px var(--font-display);box-shadow:0 20px 40px -12px rgba(0,0,0,.9);
+  transform:translate(-50%,140%);opacity:0;transition:transform 400ms var(--ease-out),opacity 300ms ease}
+.toast.show{transform:translate(-50%,0);opacity:1}
+
+/* ---------- responsive ---------- */
+@media (max-width:980px){
+  .bento{grid-template-columns:1fr 1fr}
+  .feat.w3,.feat.w2,.feat.w4{grid-column:span 1}
+  .feat.wide-sm{grid-column:span 2}
+  .themes{grid-template-columns:1fr}
+  .theme-list{grid-template-columns:repeat(3,1fr)}
+  .theme-btn span{display:none}
+  .plans{grid-template-columns:1fr;max-width:480px;margin-inline:auto}
+  .foot{grid-template-columns:1fr 1fr}
+}
+@media (max-width:820px){.how{grid-template-columns:1fr}}
+@media (max-width:620px){
+  .bento{grid-template-columns:1fr}
+  .feat.wide-sm{grid-column:span 1}
+  .theme-list{gap:6px}
+  .theme-btn{padding:12px}
+  .pv-nav{display:none}
+  .pv-works{grid-template-columns:1fr 1fr}
+  .pv-works > :nth-child(3){display:none}
+  .step{padding:8px 10px;font-size:11.5px}
+  section.sec{padding-top:88px}
+  .ba{aspect-ratio:4/3}
+}
+@media (prefers-reduced-motion:reduce){
+  :root{--move:1ms}
+  html{scroll-behavior:auto}
+  .rise,.drop .file,.livepill b,.domain .caret,.sync span.new{animation:none}
+  .scene,.base,.fbadge,.fbadge.on,.cursor{transition-duration:1ms!important;transition-delay:0ms!important}
+  .reveal.in{animation:none}
+  .btn-silver::after{display:none}
+}
+</style>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav wrap">
+  <div class="nav-in">
+    <a class="mark" href="#top" aria-label="Unfold, back to top">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5.5 9.5 3v16L3 21.5z" fill="#bdbdc3"/><path d="M9.5 3 15 5.5v16L9.5 19z" fill="#6c6c73"/><path d="M15 5.5 21 3v16l-6 2.5z" fill="#f2f2f4"/></svg>Unfold</a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="#how">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#themes">Themes</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="signin" href="#start">Sign in</a>
+      <a class="btn btn-silver" href="#start">Get started</a>
+      <button class="menu-btn" id="menuBtn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Open menu">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M3 6h12M3 12h12"/></svg></button>
+    </div>
+    <div class="menu" id="menu">
+      <a href="#how">How it works</a><a href="#features">Features</a><a href="#themes">Themes</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="#start">Sign in</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <!-- HERO -->
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <canvas id="silk" aria-hidden="true"></canvas>
+    <div class="veil"></div>
+    <div class="grain"></div>
+    <div class="wrap">
+      <div class="hero-copy">
+        <div class="badge-pill rise"><b>New</b>Import straight from a LinkedIn PDF</div>
+        <h1 id="hero-title" class="rise">Your resume, <em>unfolded</em> into a portfolio that gets you hired.</h1>
+        <p class="lede rise">Upload the resume you already have. <b>Unfold reads your experience, turns your bullet points into project stories and publishes a portfolio site</b> with its own link, ready to send in minutes.</p>
+        <div class="hero-actions rise">
+          <a class="btn btn-silver btn-lg" href="#start">Unfold my resume<span class="arrow"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span></a>
+          <div class="micro">Free to start <span>·</span> PDF or DOCX <span>·</span> No credit card</div>
+        </div>
+      </div>
+
+      <div class="s3d rise" id="s3d" data-state="resume">
+        <div class="viewport" id="viewport">
+          <div class="fit" id="fit">
+            <div class="tilt" id="tilt">
+              <div class="scene" aria-hidden="true">
+                <div class="floor"></div>
+                <div class="base">
+                  <div class="face paper"><span class="pdf">PDF</span><div class="rule"></div>
+                    <span class="lbl" style="top:86px">Experience</span><span class="lbl" style="top:254px">Skills</span><span class="lbl" style="top:326px">Contact</span><span class="fold"></span></div>
+                  <div class="face site"><div class="glow"></div>
+                    <div class="bar"><i></i><i></i><i></i>
+                      <span class="url"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="5.5" width="7" height="5" rx="1.2"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5"/></svg>maya.unfold.site</span>
+                      <span class="livepill"><b></b>Live · <span id="views">1,284</span> views</span></div></div>
+                </div>
+                <div class="piece avatar" style="--rx:172px;--ry:22px;--rw:42px;--rh:42px;--lx:36px;--ly:62px;--lw:62px;--lh:62px;--z:96px;--lz:16px;--d:0ms"><div class="pf">MI</div></div>
+                <div class="piece name" style="--rx:222px;--ry:22px;--rw:206px;--rh:44px;--lx:112px;--ly:58px;--lw:320px;--lh:76px;--z:120px;--lz:12px;--d:40ms">
+                  <div class="pf pr"><b>Maya Iyer</b><span>Product Designer · Bengaluru</span></div>
+                  <div class="pf pl"><small><i></i>Maya Iyer · open to work</small><h3>Designing <em>calm</em> software for busy teams.</h3></div></div>
+                <div class="piece job" style="--rx:172px;--ry:102px;--rw:256px;--rh:38px;--lx:36px;--ly:158px;--lw:166px;--lh:136px;--z:60px;--lz:22px;--d:80ms">
+                  <div class="pf pr"><div class="t">Senior Designer, Linear Health<span>2022–</span></div><div class="ln" style="width:94%"></div><div class="ln" style="width:70%"></div></div>
+                  <div class="pf pl"><div class="thumb th1"><div class="ui"><span></span><span></span><span></span></div></div><b>Care dashboard</b><small>Linear Health · 2025</small></div></div>
+                <div class="piece job" style="--rx:172px;--ry:148px;--rw:256px;--rh:38px;--lx:217px;--ly:158px;--lw:166px;--lh:136px;--z:78px;--lz:30px;--d:120ms">
+                  <div class="pf pr"><div class="t">Product Designer, Tandem Bank<span>2019–22</span></div><div class="ln" style="width:88%"></div><div class="ln" style="width:62%"></div></div>
+                  <div class="pf pl"><div class="thumb th2"><div class="ui"><span></span><span></span><span></span></div></div><b>Mobile banking</b><small>Tandem · 2022</small></div></div>
+                <div class="piece job" style="--rx:172px;--ry:194px;--rw:256px;--rh:38px;--lx:398px;--ly:158px;--lw:166px;--lh:136px;--z:44px;--lz:22px;--d:160ms">
+                  <div class="pf pr"><div class="t">UI Designer, Studio North<span>2017–19</span></div><div class="ln" style="width:80%"></div><div class="ln" style="width:52%"></div></div>
+                  <div class="pf pl"><div class="thumb th3"><div class="ui"><span></span><span></span><span></span></div></div><b>Design tokens</b><small>Open source · 2019</small></div></div>
+                <div class="piece skills" style="--rx:172px;--ry:268px;--rw:256px;--rh:46px;--lx:36px;--ly:312px;--lw:400px;--lh:30px;--z:140px;--lz:10px;--d:200ms">
+                  <div class="pf pr"><span class="chip">Figma</span><span class="chip">Prototyping</span><span class="chip">User research</span><span class="chip">Design systems</span><span class="chip">Motion</span><span class="chip">SQL</span></div>
+                  <div class="pf pl"><span class="chip">Figma</span><span class="chip">Prototyping</span><span class="chip">User research</span><span class="chip">Design systems</span><span class="chip">Motion</span></div></div>
+                <div class="piece contact" id="contact" style="--rx:172px;--ry:340px;--rw:256px;--rh:34px;--lx:450px;--ly:72px;--lw:114px;--lh:36px;--z:170px;--lz:18px;--d:240ms">
+                  <div class="pf pr">maya@iyer.design<br>linkedin.com/in/mayaiyer</div>
+                  <div class="pf pl">Hire Maya <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h8M6.5 2.5 10 6l-3.5 3.5"/></svg></div></div>
+                <div class="fbadge" id="bParse" style="--bx:420px;--by:30px;--bz:210px">
+                  <span class="ic"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 2.5h5.5L11 5v6.5H3z"/><path d="M5 7h4M5 9.5h3"/></svg></span>
+                  <span><b>Reading your resume</b><small>3 roles · 6 skills · 1 photo</small></span></div>
+                <div class="fbadge" id="bPub" style="--bx:430px;--by:322px;--bz:90px">
+                  <span class="ic"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5 5.8 10 11 4"/></svg></span>
+                  <span><b>Published in 2m 41s</b><small>maya.unfold.site</small></span></div>
+                <div class="fbadge" id="bViews" style="--bx:470px;--by:-34px;--bz:110px">
+                  <span><b id="weekViews">+128 visitors</b><small>this week</small></span>
+                  <svg class="spark" viewBox="0 0 54 20" fill="none"><defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6e6ea" stop-opacity=".35"/><stop offset="1" stop-color="#e6e6ea" stop-opacity="0"/></linearGradient></defs>
+                    <path d="M1 16 9 13 17 14 25 9 33 11 41 6 53 2V20H1Z" fill="url(#sg)"/><path d="M1 16 9 13 17 14 25 9 33 11 41 6 53 2" stroke="#ededf0" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="53" cy="2" r="1.8" fill="#fff"/></svg></div>
+                <svg class="cursor" id="cursor" viewBox="0 0 18 18"><path d="M2 1.5 15 8.2l-5.8 1.3L6.6 15z" fill="#fff" stroke="#0b0b0c" stroke-width="1.1" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="steps" role="group" aria-label="Demo stage">
+          <button class="step" type="button" aria-pressed="true">Resume<span class="prog"></span></button>
+          <button class="step" type="button" aria-pressed="false">Unfolding<span class="prog"></span></button>
+          <button class="step" type="button" aria-pressed="false">Live portfolio<span class="prog"></span></button>
+        </div>
+      </div>
+
+      <div class="formats">
+        <p>Works with the resume you already have</p>
+        <span><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h7l3 3v11H4z"/><path d="M11 2v3h3"/></svg>PDF</span>
+        <span><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h7l3 3v11H4z"/><path d="M7 9l1 4 1-3 1 3 1-4"/></svg>Word DOCX</span>
+        <span><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="2.5" width="13" height="13" rx="3"/><path d="M6 8v4M6 5.5v.01M9 12V8m0 1.5a1.5 1.5 0 0 1 3 0V12"/></svg>LinkedIn export</span>
+        <span><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 2h7l3 3v11H4z"/><path d="M7 8h4M7 11h4M7 14h2"/></svg>Google Docs</span>
+        <span><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4h12M3 9h12M3 14h8"/></svg>Plain text</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <!-- HOW -->
+    <section class="sec" id="how" aria-labelledby="how-h">
+      <div class="sec-head">
+        <div class="label">How it works</div>
+        <h2 id="how-h">From PDF to a live site in <em>three steps.</em></h2>
+        <p class="sec-sub">No templates to fill in and no blank page. Unfold starts from what you've already written and you only fix what it got wrong.</p>
+      </div>
+      <div class="how">
+        <article class="card reveal">
+          <div class="how-n"><b>1</b>Upload</div>
+          <h3>Drop in your resume</h3>
+          <p>PDF, Word or a LinkedIn export. Unfold reads roles, dates, skills and links in a few seconds.</p>
+          <div class="how-vis"><div class="drop"><span class="file"><i>PDF</i>maya-iyer-resume.pdf</span>drop here</div></div>
+        </article>
+        <article class="card reveal" style="--rd:70ms">
+          <div class="how-n"><b>2</b>Review</div>
+          <h3>Check what it found</h3>
+          <p>Every role becomes a project you can rename, reorder, hide or add screenshots to.</p>
+          <div class="how-vis"><div class="review">
+            <div><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 5 8.5l4.5-5"/></svg>Care dashboard<span>ready</span></div>
+            <div><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.2 5 8.5l4.5-5"/></svg>Mobile banking<span>ready</span></div>
+            <div class="edit"><svg viewBox="0 0 12 12" fill="none" stroke="#9a9aa2" stroke-width="1.6" stroke-linecap="round"><path d="M2 10h2l5.5-5.5-2-2L2 8z"/></svg>Design tokens<span>add images</span></div>
+          </div></div>
+        </article>
+        <article class="card reveal" style="--rd:140ms">
+          <div class="how-n"><b>3</b>Publish</div>
+          <h3>Share one link</h3>
+          <p>Your site goes live on a free unfold.site address, or on your own domain with Pro.</p>
+          <div class="how-vis"><div class="publish"><span class="url-big"><b></b>maya.unfold.site</span><small>live · updates when you do</small></div></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- BEFORE / AFTER -->
+    <section class="sec" id="compare" aria-labelledby="ba-h">
+      <div class="sec-head center">
+        <div class="label">Before and after</div>
+        <h2 id="ba-h">Same experience. <em>A far better first impression.</em></h2>
+        <p class="sec-sub">Recruiters spend seconds on a resume. A portfolio shows the work behind each line. Drag to compare.</p>
+      </div>
+      <div class="ba reveal" id="ba">
+        <div class="ba-layer ba-site">
+          <span class="ba-tag">Portfolio</span>
+          <div class="mini">
+            <div class="mini-bar"><i></i><i></i><i></i><span>maya.unfold.site</span></div>
+            <div class="mini-body">
+              <div class="mini-grid">
+                <div style="background:radial-gradient(80% 90% at 25% 20%,#7a7a82,#202024 75%)"></div>
+                <div style="background:linear-gradient(135deg,#1c1c20,#55555c 52%,#18181b)"></div>
+                <div style="background:repeating-linear-gradient(135deg,#202024 0 8px,#2a2a2f 8px 16px)"></div>
+                <div style="background:radial-gradient(70% 80% at 70% 80%,#6a6a72,#1f1f23 70%)"></div>
+              </div>
+              <div><div class="eb">Maya Iyer · Product Designer</div><h4>Designing <em>calm</em> software for busy teams.</h4>
+                <p>Eight years designing health and finance products. Currently leading the care dashboard at Linear Health.</p><span class="mini-btn">Hire Maya</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="ba-layer ba-resume" id="baTop">
+          <span class="ba-tag">Resume</span>
+          <div class="sheet">
+            <b>Maya Iyer</b><small>Product Designer · Bengaluru · maya@iyer.design</small>
+            <hr>
+            <div class="h">Experience</div>
+            <div class="row">Senior Designer, Linear Health</div><div class="ln" style="width:92%"></div><div class="ln" style="width:70%"></div>
+            <div class="row">Product Designer, Tandem Bank</div><div class="ln" style="width:86%"></div><div class="ln" style="width:58%"></div>
+            <div class="row">UI Designer, Studio North</div><div class="ln" style="width:78%"></div>
+            <hr>
+            <div class="h">Skills</div><div class="ln" style="width:84%"></div><div class="ln" style="width:60%"></div>
+          </div>
+        </div>
+        <div class="ba-handle" id="baHandle"><button class="ba-knob" id="baKnob" type="button" role="slider" aria-label="Compare resume and portfolio" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 6 3 10l4 4M13 6l4 4-4 4"/></svg></button></div>
+      </div>
+      <p class="ba-note">Sample resume and portfolio for illustration</p>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="sec" id="features" aria-labelledby="f-h">
+      <div class="sec-head">
+        <div class="label">Features</div>
+        <h2 id="f-h">Everything a portfolio needs. <em>Nothing you have to build.</em></h2>
+      </div>
+      <div class="bento">
+        <article class="card feat feat-spot w3 reveal">
+          <h3>Reads any resume</h3>
+          <p>Columns, tables, two-page CVs and LinkedIn exports. Unfold keeps your dates, titles and links exactly as written.</p>
+          <div class="fvis files"><span><i>PDF</i>resume_final_v3.pdf</span><span><i>DOC</i>cv-2026.docx</span><span><i>IN</i>Profile.pdf</span></div>
+        </article>
+        <article class="card feat feat-spot w3 reveal" style="--rd:60ms">
+          <h3>Writes your case studies</h3>
+          <p>Each bullet point becomes a short project story with the problem, what you did and the result. You approve every word.</p>
+          <div class="fvis rewrite">
+            <div class="from">• Redesigned onboarding, +18% activation</div>
+            <div class="to"><b>Onboarding, rebuilt.</b> New patients were dropping off at insurance details. I split the flow into three short steps and activation rose 18% in six weeks.</div>
+          </div>
+        </article>
+        <article class="card feat feat-spot w2 wide-sm reveal">
+          <h3>Your own domain</h3>
+          <p>Start on unfold.site, then connect a domain you own. HTTPS is set up for you.</p>
+          <div class="fvis domain"><svg class="lock" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="2.5" y="5.5" width="7" height="5" rx="1.2"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5"/></svg><span class="typed" id="typed">maya.unfold.site</span><span class="caret"></span></div>
+        </article>
+        <article class="card feat feat-spot w4 wide-sm reveal" style="--rd:60ms">
+          <h3>See who's looking</h3>
+          <p>Views, the projects people open and where they came from, so you know which applications landed.</p>
+          <div class="fvis">
+            <svg class="chart" id="chart" viewBox="0 0 560 120" preserveAspectRatio="none" aria-label="Sample chart of portfolio views over 30 days" role="img"></svg>
+            <div class="chart-legend"><span>Sep 18</span><span><b id="chartTotal">0</b> views in 30 days (sample)</span><span>Oct 17</span></div>
+          </div>
+        </article>
+        <article class="card feat feat-spot w3 reveal">
+          <h3>Stays in sync</h3>
+          <p>Upload a new version of your resume and Unfold updates only what changed. Your edits and images stay put.</p>
+          <div class="fvis sync">
+            <div class="doc"><span style="width:80%"></span><span style="width:60%"></span><span class="new" style="width:72%"></span><span style="width:50%"></span></div>
+            <svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13l-4-4M18 13H5l4 4"/></svg>
+            <div class="web"><span style="width:70%"></span><span style="width:52%"></span><span class="new" style="width:66%"></span><span style="width:44%"></span></div>
+          </div>
+        </article>
+        <article class="card feat feat-spot w3 reveal" style="--rd:60ms">
+          <h3>Private by default</h3>
+          <p>Choose exactly what goes public. Phone numbers and addresses stay hidden unless you turn them on.</p>
+          <div class="fvis toggles">
+            <label class="tog" for="tg1">Show email address<input id="tg1" type="checkbox" checked><span class="switch"></span></label>
+            <label class="tog" for="tg2">Show phone number<input id="tg2" type="checkbox"><span class="switch"></span></label>
+            <label class="tog" for="tg3">Let search engines index my site<input id="tg3" type="checkbox" checked><span class="switch"></span></label>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- THEMES -->
+    <section class="sec" id="themes" aria-labelledby="t-h">
+      <div class="sec-head">
+        <div class="label">Themes</div>
+        <h2 id="t-h">One resume, <em>three very different sites.</em></h2>
+        <p class="sec-sub">Switch themes any time. Your content moves with you, so trying a new look takes one click.</p>
+      </div>
+      <div class="themes">
+        <div class="theme-list" role="group" aria-label="Choose a theme" id="themeList">
+          <button class="theme-btn" type="button" aria-pressed="true" data-t="t-graphite"><b>Graphite</b><span>Dark and quiet. Lets the work glow.</span></button>
+          <button class="theme-btn" type="button" aria-pressed="false" data-t="t-paper"><b>Broadsheet</b><span>Serif headlines with an editorial feel.</span></button>
+          <button class="theme-btn" type="button" aria-pressed="false" data-t="t-studio"><b>Studio</b><span>A loud grid for designers who like type.</span></button>
+        </div>
+        <div class="preview reveal">
+          <div class="pv-bar"><i></i><i></i><i></i><span>maya.unfold.site</span></div>
+          <div class="pv t-graphite" id="pv">
+            <div class="pv-top"><span class="pv-logo">Maya Iyer</span><span class="pv-nav"><span>Work</span><span>About</span><span>Contact</span></span></div>
+            <div class="pv-hero"><small>Product Designer · Bengaluru</small><h3>Designing calm software for busy teams.</h3></div>
+            <div class="pv-works">
+              <div><div></div><span>Care dashboard</span></div>
+              <div><div></div><span>Mobile banking</span></div>
+              <div><div></div><span>Design tokens</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="sec" id="pricing" aria-labelledby="p-h">
+      <div class="sec-head center">
+        <div class="label">Pricing</div>
+        <h2 id="p-h">Free to start. <em>Cheap to keep.</em></h2>
+        <div class="bill" role="group" aria-label="Billing period" id="bill">
+          <button type="button" aria-pressed="false" data-b="m">Monthly</button>
+          <button type="button" aria-pressed="true" data-b="y">Yearly<small>save 25%</small></button>
+        </div>
+      </div>
+      <div class="plans">
+        <article class="card plan reveal">
+          <div class="plan-h"><b>Free</b></div>
+          <div class="price"><span class="amt">$0</span><small>forever</small></div>
+          <p>For trying Unfold with your current resume.</p>
+          <ul>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>1 portfolio on unfold.site</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>3 themes</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>Resume import and sync</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>Small "Made with Unfold" badge</li>
+          </ul>
+          <a class="btn btn-ghost" href="#start">Start free</a>
+        </article>
+        <article class="card plan pro reveal" style="--rd:60ms">
+          <div class="plan-h"><b>Pro</b><span>Most popular</span></div>
+          <div class="price"><span class="amt" data-m="$12" data-y="$9">$9</span><small data-m="/ month" data-y="/ month, billed yearly">/ month, billed yearly</small></div>
+          <p>For job seekers who want the full picture.</p>
+          <ul>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>Everything in Free</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>Custom domain with HTTPS</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>All themes and custom fonts</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>Case study writer</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>Visitor analytics</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>No Unfold badge</li>
+          </ul>
+          <a class="btn btn-silver" href="#start">Get Pro</a>
+        </article>
+        <article class="card plan reveal" style="--rd:120ms">
+          <div class="plan-h"><b>Teams</b></div>
+          <div class="price"><span class="amt" data-m="$8" data-y="$6">$6</span><small data-m="/ seat / month" data-y="/ seat / month, yearly">/ seat / month, yearly</small></div>
+          <p>For bootcamps, universities and career coaches.</p>
+          <ul>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>Everything in Pro, per seat</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>Bulk import for a whole cohort</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>Shared themes with your branding</li>
+            <li><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>Coach dashboard and reviews</li>
+          </ul>
+          <a class="btn btn-ghost" href="#start">Talk to us</a>
+        </article>
+      </div>
+      <p class="price-note">Prices in USD. Cancel any time, and your site stays online until the end of the period.</p>
+    </section>
+
+    <!-- FAQ -->
+    <section class="sec" id="faq" aria-labelledby="q-h">
+      <div class="sec-head center">
+        <div class="label">FAQ</div>
+        <h2 id="q-h">Questions, <em>answered.</em></h2>
+      </div>
+      <div class="faq" id="faqList">
+        <div class="qa"><button type="button" aria-expanded="false" id="q1" aria-controls="a1">What file types can I upload?<span class="pm"></span></button>
+          <div class="ans" id="a1" role="region" aria-labelledby="q1"><div><p>PDF, Word (.docx), a LinkedIn profile export, or text pasted from Google Docs. Scanned PDFs work too, though you may need to fix a few lines after import.</p></div></div></div>
+        <div class="qa"><button type="button" aria-expanded="false" id="q2" aria-controls="a2">Will it make things up about me?<span class="pm"></span></button>
+          <div class="ans" id="a2" role="region" aria-labelledby="q2"><div><p>No. Unfold only rewrites what's in your resume, and every generated case study is a draft until you approve it. Numbers and employer names are never invented or changed.</p></div></div></div>
+        <div class="qa"><button type="button" aria-expanded="false" id="q3" aria-controls="a3">Can I use my own domain?<span class="pm"></span></button>
+          <div class="ans" id="a3" role="region" aria-labelledby="q3"><div><p>Yes, on Pro. Add a domain you own, update one DNS record and Unfold sets up HTTPS automatically. Free sites live on yourname.unfold.site.</p></div></div></div>
+        <div class="qa"><button type="button" aria-expanded="false" id="q4" aria-controls="a4">What happens to my data?<span class="pm"></span></button>
+          <div class="ans" id="a4" role="region" aria-labelledby="q4"><div><p>Your resume is used only to build your portfolio. You can delete your account and every file with one button, and we don't use your content to train models.</p></div></div></div>
+        <div class="qa"><button type="button" aria-expanded="false" id="q5" aria-controls="a5">I'm not a designer. Is this for me?<span class="pm"></span></button>
+          <div class="ans" id="a5" role="region" aria-labelledby="q5"><div><p>Yes. Engineers, marketers, analysts and new grads use the same flow. If you don't have screenshots, Unfold builds project cards from your results and skills instead.</p></div></div></div>
+        <div class="qa"><button type="button" aria-expanded="false" id="q6" aria-controls="a6">Can I export my site?<span class="pm"></span></button>
+          <div class="ans" id="a6" role="region" aria-labelledby="q6"><div><p>Pro users can download the full site as static HTML, or export the content as Markdown to take anywhere.</p></div></div></div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="sec" id="start" aria-labelledby="c-h">
+      <div class="final">
+        <div class="label">Get started</div>
+        <h2 id="c-h">Your next job wants to <em>see the work.</em></h2>
+        <p class="sec-sub" style="margin-inline:auto">Drop your resume below to try it. This is a preview, so your file stays in your browser and isn't uploaded.</p>
+        <div class="dz" id="dz">
+          <input type="file" id="fileIn" accept=".pdf,.doc,.docx,.txt" aria-label="Choose a resume file">
+          <div class="dz-idle" id="dzIdle">
+            <span class="dz-icon"><svg viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 15V4M6.5 8.5 11 4l4.5 4.5M4 15v2.5A1.5 1.5 0 0 0 5.5 19h11a1.5 1.5 0 0 0 1.5-1.5V15"/></svg></span>
+            <b>Drop your resume here, or click to choose</b>
+            <span>PDF, DOCX or TXT · up to 10 MB</span>
+          </div>
+          <div class="dz-run" id="dzRun" hidden>
+            <div class="dz-file"><i id="dzExt">PDF</i><b id="dzName">resume.pdf</b><button type="button" id="dzReset">Try another</button></div>
+            <div class="dz-track"><div class="dz-fill" id="dzFill"></div></div>
+            <div class="dz-stage"><span id="dzStage">Reading roles and dates</span><span id="dzPct">0%</span></div>
+            <div class="dz-done" id="dzDone" hidden><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.5 6.5 11l6-6.5"/></svg>Preview ready. Create an account to publish it.<span>demo</span></div>
+          </div>
+        </div>
+        <div class="micro">Free plan · No credit card · Delete everything any time</div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="mark" href="#top"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 5.5 9.5 3v16L3 21.5z" fill="#bdbdc3"/><path d="M9.5 3 15 5.5v16L9.5 19z" fill="#6c6c73"/><path d="M15 5.5 21 3v16l-6 2.5z" fill="#f2f2f4"/></svg>Unfold</a>
+        <p>Turn the resume you already have into a portfolio people remember.</p>
+      </div>
+      <div><h4>Product</h4><ul><li><a href="#how">How it works</a></li><li><a href="#features">Features</a></li><li><a href="#themes">Themes</a></li><li><a href="#pricing">Pricing</a></li></ul></div>
+      <div><h4>Resources</h4><ul><li><a href="#faq">FAQ</a></li><li><a href="#start">Help center</a></li><li><a href="#start">Portfolio guide</a></li><li><a href="#start">Changelog</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="#start">About</a></li><li><a href="#start">Privacy</a></li><li><a href="#start">Terms</a></li><li><a href="#start">Contact</a></li></ul></div>
+    </div>
+    <div class="foot-base"><span>© 2026 Unfold</span><span class="ok"><b></b>All systems normal</span></div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fine = matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+  /* ---------- mobile menu ---------- */
+  const menuBtn = $('#menuBtn'), menu = $('#menu');
+  function setMenu(o){ menu.classList.toggle('open', o); menuBtn.setAttribute('aria-expanded', String(o)); menuBtn.setAttribute('aria-label', o ? 'Close menu' : 'Open menu'); }
+  menuBtn.addEventListener('click', e => { e.stopPropagation(); setMenu(!menu.classList.contains('open')); });
+  $$('a', menu).forEach(a => a.addEventListener('click', () => setMenu(false)));
+  document.addEventListener('click', e => { if (!menu.contains(e.target)) setMenu(false); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && menu.classList.contains('open')){ setMenu(false); menuBtn.focus(); } });
+
+  /* ---------- reveal (only for content below the fold at load) ---------- */
+  const reveals = $$('.reveal');
+  if ('IntersectionObserver' in window && !reduce){
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }));
+    reveals.forEach(el => { if (el.getBoundingClientRect().top > innerHeight) io.observe(el); });
+  }
+
+  /* ---------- 3D demo ---------- */
+  const s3d = $('#s3d'), fit = $('#fit'), vp = $('#viewport');
+  const steps = $$('.step', s3d);
+  const bParse = $('#bParse'), bPub = $('#bPub'), bViews = $('#bViews'), cursor = $('#cursor'), contact = $('#contact');
+  const viewsEl = $('#views'), weekEl = $('#weekViews');
+  function size(){ const s = Math.min(1, vp.clientWidth / 720); fit.style.transform = 'scale(' + s + ')'; vp.style.height = (540 * s) + 'px'; }
+  addEventListener('resize', size); size();
+  const PHASES = [['resume', 2000], ['explode', 1900], ['live', 5600]];
+  let idx = 0, timer, timers = [], views = 1284, week = 128, auto = !reduce, demoVisible = true;
+  const later = (fn, ms) => timers.push(setTimeout(fn, ms));
+  function go(i){
+    idx = i; const [name, dur] = PHASES[i];
+    s3d.dataset.state = name; timers.forEach(clearTimeout); timers = [];
+    steps.forEach((s, j) => {
+      s.setAttribute('aria-pressed', String(j === i));
+      s.classList.remove('run'); void s.offsetWidth;
+      if (j === i && auto){ s.style.setProperty('--dur', dur + 'ms'); s.classList.add('run'); }
+    });
+    bParse.classList.toggle('on', name === 'explode');
+    bPub.classList.remove('on'); bViews.classList.remove('on'); cursor.classList.remove('on', 'go');
+    if (name === 'live'){
+      later(() => bPub.classList.add('on'), reduce ? 0 : 900);
+      later(() => bViews.classList.add('on'), reduce ? 0 : 1250);
+      if (!reduce){
+        later(() => cursor.classList.add('on'), 1500);
+        later(() => cursor.classList.add('go'), 1650);
+        later(() => { contact.classList.add('press'); bump(3); }, 2650);
+        later(() => contact.classList.remove('press'), 2810);
+        later(() => bump(2), 3500);
+        later(() => bump(4), 4400);
+      }
+    }
+    clearTimeout(timer);
+    if (auto && demoVisible && !document.hidden) timer = setTimeout(() => go((idx + 1) % PHASES.length), dur);
+  }
+  function bump(n){ views += n; week += n; viewsEl.textContent = views.toLocaleString('en-US'); weekEl.textContent = '+' + week + ' visitors'; }
+  steps.forEach((s, j) => s.addEventListener('click', () => {
+    auto = false; go(j); clearTimeout(timer);
+    if (!reduce) timer = setTimeout(() => { auto = true; go((idx + 1) % PHASES.length); }, 9000);
+  }));
+  function resumeDemo(){ if (auto && demoVisible && !document.hidden) go(idx); else clearTimeout(timer); }
+  document.addEventListener('visibilitychange', resumeDemo);
+  new IntersectionObserver(es => { const v = es[0].isIntersecting; if (v !== demoVisible){ demoVisible = v; resumeDemo(); } }).observe(s3d);
+  go(reduce ? 2 : 0);
+
+  if (fine && !reduce){
+    const tilt = $('#tilt'); let tx = 0, ty = 0, x = 0, y = 0, vx = 0, vy = 0, raf = null;
+    function tick(){
+      vx = (vx + (tx - x) * .045) * .82; vy = (vy + (ty - y) * .045) * .82; x += vx; y += vy;
+      tilt.style.transform = 'rotateY(' + (x * 6).toFixed(3) + 'deg) rotateX(' + (-y * 5).toFixed(3) + 'deg)';
+      raf = (Math.abs(tx - x) + Math.abs(ty - y) + Math.abs(vx) + Math.abs(vy) > .0005) ? requestAnimationFrame(tick) : null;
+    }
+    s3d.addEventListener('pointermove', e => { const r = s3d.getBoundingClientRect(); tx = ((e.clientX - r.left) / r.width - .5) * 2; ty = ((e.clientY - r.top) / r.height - .5) * 2; if (!raf) raf = requestAnimationFrame(tick); });
+    s3d.addEventListener('pointerleave', () => { tx = 0; ty = 0; if (!raf) raf = requestAnimationFrame(tick); });
+  }
+
+  /* ---------- before / after slider ---------- */
+  const ba = $('#ba'), baTop = $('#baTop'), baHandle = $('#baHandle'), knob = $('#baKnob');
+  let pos = 50, dragging = false;
+  function setPos(p){
+    pos = Math.max(0, Math.min(100, p));
+    baTop.style.clipPath = 'inset(0 ' + (100 - pos) + '% 0 0)';
+    baHandle.style.transform = 'translateX(' + (pos / 100 * ba.clientWidth) + 'px)';
+    knob.setAttribute('aria-valuenow', String(Math.round(pos)));
+    knob.setAttribute('aria-valuetext', Math.round(pos) + '% resume');
+  }
+  function fromEvent(e){ const r = ba.getBoundingClientRect(); setPos((e.clientX - r.left) / r.width * 100); }
+  ba.addEventListener('pointerdown', e => {
+    if (dragging || e.button > 0) return;          // ignore extra touch points
+    dragging = true; ba.classList.add('dragging'); ba.setPointerCapture(e.pointerId); fromEvent(e);
+  });
+  ba.addEventListener('pointermove', e => { if (dragging) fromEvent(e); });
+  const end = e => { if (!dragging) return; dragging = false; ba.classList.remove('dragging'); try { ba.releasePointerCapture(e.pointerId); } catch(_){} };
+  ba.addEventListener('pointerup', end); ba.addEventListener('pointercancel', end);
+  knob.addEventListener('keydown', e => {
+    const step = e.shiftKey ? 10 : 2;
+    const map = {ArrowLeft:-step, ArrowRight:step, ArrowDown:-step, ArrowUp:step};
+    if (e.key in map){ e.preventDefault(); setPos(pos + map[e.key]); }
+    else if (e.key === 'Home'){ e.preventDefault(); setPos(0); }
+    else if (e.key === 'End'){ e.preventDefault(); setPos(100); }
+  });
+  addEventListener('resize', () => setPos(pos));
+  setPos(50);
+
+  /* ---------- feature: card spotlight ---------- */
+  if (fine) $$('.feat-spot').forEach(c => c.addEventListener('pointermove', e => {
+    const r = c.getBoundingClientRect(); c.style.setProperty('--sx', (e.clientX - r.left) + 'px'); c.style.setProperty('--sy', (e.clientY - r.top) + 'px');
+  }));
+
+  /* ---------- feature: domain typing ---------- */
+  const typed = $('#typed'); const DOMAINS = ['maya.unfold.site', 'mayaiyer.com', 'maya.design'];
+  if (!reduce){
+    let di = 0, ci = DOMAINS[0].length, mode = 'hold';
+    (function step(){
+      if (mode === 'hold'){ mode = 'del'; return setTimeout(step, 2200); }
+      if (mode === 'del'){
+        ci--; typed.textContent = DOMAINS[di].slice(0, ci);
+        if (ci === 0){ di = (di + 1) % DOMAINS.length; mode = 'type'; }
+        return setTimeout(step, 45);
+      }
+      ci++; typed.textContent = DOMAINS[di].slice(0, ci);
+      if (ci === DOMAINS[di].length) mode = 'hold';
+      setTimeout(step, 85);
+    })();
+  }
+
+  /* ---------- feature: analytics chart (sample data, drawn to scale) ---------- */
+  (function(){
+    const svg = $('#chart'), NS = 'http://www.w3.org/2000/svg', W = 560, H = 120, pad = 8;
+    let s = 7; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+    const data = Array.from({length:30}, (_, i) => Math.round(18 + i * 1.6 + r() * 22 + (i === 21 ? 40 : 0) + (i === 22 ? 22 : 0)));
+    const max = Math.max(...data) * 1.1;
+    const X = i => i / (data.length - 1) * W, Y = v => H - pad - v / max * (H - pad * 2);
+    const line = data.map((v, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1)).join(' ');
+    const mk = (tag, attrs) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); svg.appendChild(el); return el; };
+    const defs = mk('defs', {});
+    defs.innerHTML = '<linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e6e6ea" stop-opacity=".22"/><stop offset="1" stop-color="#e6e6ea" stop-opacity="0"/></linearGradient>';
+    [0.25, .5, .75].forEach(f => mk('line', {x1:0, x2:W, y1:(pad + f * (H - pad * 2)).toFixed(1), y2:(pad + f * (H - pad * 2)).toFixed(1), stroke:'rgba(255,255,255,.05)', 'stroke-width':1, 'vector-effect':'non-scaling-stroke'}));
+    mk('path', {d: line + ' L' + W + ' ' + H + ' L0 ' + H + ' Z', fill:'url(#cg)'});
+    const p = mk('path', {d: line, fill:'none', stroke:'#ededf0', 'stroke-width':1.6, 'stroke-linejoin':'round', 'stroke-linecap':'round', 'vector-effect':'non-scaling-stroke'});
+    const last = data.length - 1;
+    mk('circle', {cx:X(last), cy:Y(data[last]), r:3.5, fill:'#fff'});
+    $('#chartTotal').textContent = data.reduce((a, b) => a + b, 0).toLocaleString('en-US');
+  })();
+
+  /* ---------- themes ---------- */
+  const pv = $('#pv'); const tBtns = $$('#themeList .theme-btn'); let tTimer;
+  tBtns.forEach(b => b.addEventListener('click', () => {
+    if (b.getAttribute('aria-pressed') === 'true') return;
+    tBtns.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    clearTimeout(tTimer);
+    if (reduce){ pv.className = 'pv ' + b.dataset.t; return; }
+    pv.classList.add('swap');
+    tTimer = setTimeout(() => { pv.className = 'pv swap ' + b.dataset.t; requestAnimationFrame(() => pv.classList.remove('swap')); }, 170);
+  }));
+
+  /* ---------- pricing toggle ---------- */
+  const billBtns = $$('#bill button');
+  billBtns.forEach(b => b.addEventListener('click', () => {
+    if (b.getAttribute('aria-pressed') === 'true') return;
+    billBtns.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    const k = b.dataset.b;
+    $$('.price').forEach(pr => {
+      const amt = $('.amt', pr), sm = $('small', pr);
+      if (!amt.dataset[k]) return;
+      amt.classList.add('swap');
+      setTimeout(() => { amt.textContent = amt.dataset[k]; if (sm.dataset[k]) sm.textContent = sm.dataset[k]; amt.classList.remove('swap'); }, reduce ? 0 : 160);
+    });
+  }));
+
+  /* ---------- FAQ ---------- */
+  $$('#faqList .qa button').forEach(b => b.addEventListener('click', () => {
+    b.setAttribute('aria-expanded', String(b.getAttribute('aria-expanded') !== 'true'));
+  }));
+
+  /* ---------- drop zone demo ---------- */
+  const dz = $('#dz'), fileIn = $('#fileIn'), idle = $('#dzIdle'), run = $('#dzRun'), fill = $('#dzFill'), stage = $('#dzStage'), pct = $('#dzPct'), done = $('#dzDone');
+  const toast = $('#toast'); let tt, runTimers = [];
+  function say(m){ toast.textContent = m; toast.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => toast.classList.remove('show'), 2600); }
+  const STAGES = [['Reading roles and dates', 22], ['Finding projects and results', 48], ['Writing headlines', 71], ['Picking a theme', 90], ['Building your preview', 100]];
+  function reset(){
+    runTimers.forEach(clearTimeout); runTimers = [];
+    run.hidden = true; idle.hidden = false; done.hidden = true; fill.style.transform = 'scaleX(0)'; pct.textContent = '0%';
+    fileIn.value = ''; fileIn.hidden = false;
+  }
+  function start(file){
+    if (!file) return;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!['pdf', 'doc', 'docx', 'txt'].includes(ext)){ say('That file type isn\'t supported. Use PDF, DOCX or TXT.'); return; }
+    if (file.size > 10 * 1024 * 1024){ say('That file is over 10 MB. Try a smaller export.'); return; }
+    runTimers.forEach(clearTimeout); runTimers = [];
+    idle.hidden = true; run.hidden = false; done.hidden = true; fileIn.hidden = true;
+    $('#dzName').textContent = file.name; $('#dzExt').textContent = ext.toUpperCase().slice(0, 4);
+    fill.style.transform = 'scaleX(0)';
+    STAGES.forEach(([label, p], i) => runTimers.push(setTimeout(() => {
+      stage.textContent = label; pct.textContent = p + '%'; fill.style.transform = 'scaleX(' + (p / 100) + ')';
+      if (p === 100) runTimers.push(setTimeout(() => { done.hidden = false; stage.textContent = 'Done'; }, 450));
+    }, reduce ? 0 : 250 + i * 650)));
+  }
+  fileIn.addEventListener('change', () => start(fileIn.files[0]));
+  ['dragenter', 'dragover'].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(t => dz.addEventListener(t, e => { e.preventDefault(); dz.classList.remove('over'); }));
+  dz.addEventListener('drop', e => start(e.dataTransfer && e.dataTransfer.files[0]));
+  $('#dzReset').addEventListener('click', e => { e.stopPropagation(); reset(); fileIn.focus(); });
+
+  /* ---------- silk shader (black and grey) ---------- */
+  (function(){
+    const canvas = $('#silk'); const gl = canvas.getContext('webgl', {antialias:false});
+    if (!gl) return;
+    const vs = 'attribute vec2 p;varying vec2 vUv;void main(){vUv=p*0.5+0.5;gl_Position=vec4(p,0.0,1.0);}';
+    const fs = `precision highp float;varying vec2 vUv;uniform float uTime;uniform vec3 uColor;uniform float uSpeed;uniform float uScale;uniform float uRotation;uniform float uNoise;uniform vec2 uRes;
+      const float e=2.71828182845904523536;
+      float noise(vec2 t){float G=e;vec2 r=(G*sin(G*t));return fract(r.x*r.y*(1.0+t.x));}
+      vec2 rot(vec2 uv,float a){float c=cos(a),s=sin(a);return mat2(c,-s,s,c)*uv;}
+      void main(){float rnd=noise(gl_FragCoord.xy);vec2 uv=vUv;uv.x*=max(1.0,uRes.x/uRes.y)*0.55;uv=rot(uv*uScale,uRotation);vec2 tex=uv*uScale;float t=uSpeed*uTime;
+        tex.y+=0.03*sin(8.0*tex.x-t);
+        float pattern=0.6+0.4*sin(5.0*(tex.x+tex.y+cos(3.0*tex.x+5.0*tex.y)+0.02*t)+sin(20.0*(tex.x+tex.y-0.1*t)));
+        vec3 col=uColor*pattern-rnd/15.0*uNoise;gl_FragColor=vec4(col,1.0);}`;
+    const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    const prog = gl.createProgram(); gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+    gl.useProgram(prog);
+    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,3,-1,-1,3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const U = n => gl.getUniformLocation(prog, n);
+    gl.uniform3f(U('uColor'), .36, .36, .38); gl.uniform1f(U('uSpeed'), 5); gl.uniform1f(U('uScale'), 1); gl.uniform1f(U('uRotation'), .35); gl.uniform1f(U('uNoise'), 1.5);
+    const uTime = U('uTime'), uRes = U('uRes');
+    function resize(){ const d = Math.min(devicePixelRatio || 1, 1.5), w = Math.round(canvas.clientWidth * d), h = Math.round(canvas.clientHeight * d);
+      if (canvas.width !== w || canvas.height !== h){ canvas.width = w; canvas.height = h; gl.viewport(0, 0, w, h); gl.uniform2f(uRes, w, h); } }
+    let t = 0, last = performance.now(), on = true;
+    const draw = () => { resize(); gl.uniform1f(uTime, t); gl.drawArrays(gl.TRIANGLES, 0, 3); };
+    function frame(now){ const dt = Math.min(.05, (now - last) / 1000); last = now; if (on){ t += .1 * dt; draw(); } requestAnimationFrame(frame); }
+    addEventListener('resize', draw);
+    const upd = vis => { on = vis && !document.hidden; last = performance.now(); };
+    let vis = true;
+    document.addEventListener('visibilitychange', () => upd(vis));
+    new IntersectionObserver(es => { vis = es[0].isIntersecting; upd(vis); }).observe(canvas);
+    if (reduce){ t = 3; draw(); } else requestAnimationFrame(frame);
+  })();
+})();
+</script>

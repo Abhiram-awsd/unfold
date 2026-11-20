@@ -1,0 +1,13 @@
+/* Privacy and terms pages. Prefix: lg- */
+.lg{max-width:720px;margin:0 auto;padding:0 24px}
+.lg-top{display:flex;justify-content:space-between;align-items:center;padding:28px 0;font:500 14px var(--font-display);color:var(--muted)}
+.lg-main{padding:32px 0 64px;color:#d6d6da;font:400 16px/1.7 var(--font-display)}
+.lg-main h1{margin:0 0 8px;font:800 clamp(34px,6vw,48px)/1.05 var(--font-display);letter-spacing:-.04em;color:var(--fg)}
+.lg-main h2{margin:40px 0 8px;font:700 20px/1.3 var(--font-display);letter-spacing:-.01em;color:var(--fg)}
+.lg-main p,.lg-main ul{margin:0 0 14px}
+.lg-main ul{padding-left:20px}
+.lg-main li{margin-bottom:6px}
+.lg-main a{color:var(--fg);text-decoration:underline;text-underline-offset:3px}
+.lg-date{font:500 12.5px var(--font-mono);color:var(--dim)}
+.lg-foot{display:flex;gap:20px;padding:24px 0 48px;border-top:1px solid var(--line);font:500 13px var(--font-mono);color:var(--dim)}
+.lg-foot span{margin-left:auto}
